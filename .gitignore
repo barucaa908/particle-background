@@ -1,0 +1,14 @@
+# 依赖与构建产物
+node_modules/
+*.log
+
+# 编辑器
+.vscode/
+.idea/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 发布安装包由 build-extension.js 生成，如需仓库瘦身可取消下面注释
+# release/*.zip

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <div class="title"><span class="logo"></span>粒子背景</div>
+    <label class="switch" title="总开关">
+      <input type="checkbox" id="enabled" />
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <section>
+    <div class="label">模式 <span id="modeHint" class="hint"></span></div>
+    <div class="seg" id="modeSeg">
+      <button data-v="auto" class="on">自动</button>
+      <button data-v="behind">背景</button>
+      <button data-v="overlay">浮层</button>
+    </div>
+    <div class="tip">背景：粒子在内容下方，适合纯色背景的网站；浮层：粒子悬浮在页面上方，对任何网站都安全</div>
+  </section>
+
+  <section>
+    <div class="label">密度</div>
+    <div class="seg" id="densitySeg">
+      <button data-v="0.5">0.5×</button>
+      <button data-v="1" class="on">1×</button>
+      <button data-v="1.5">1.5×</button>
+      <button data-v="2">2×</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">配色</div>
+    <div class="swatches" id="paletteRow">
+      <button data-v="blue" class="sw blue on" title="蓝"></button>
+      <button data-v="violet" class="sw violet" title="紫"></button>
+      <button data-v="cyan" class="sw cyan" title="青"></button>
+      <button data-v="white" class="sw white" title="白"></button>
+      <button data-v="green" class="sw green" title="绿"></button>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">特效</div>
+    <div class="chks">
+      <label class="chk"><input type="checkbox" id="fxLines" checked /><span>连线</span></label>
+      <label class="chk"><input type="checkbox" id="fxNebula" checked /><span>星云</span></label>
+      <label class="chk"><input type="checkbox" id="fxStars" checked /><span>星尘</span></label>
+      <label class="chk"><input type="checkbox" id="fxShooting" checked /><span>流星</span></label>
+      <label class="chk"><input type="checkbox" id="fxMouse" checked /><span>鼠标交互</span></label>
+    </div>
+  </section>
+
+  <section id="opacitySec" hidden>
+    <div class="label">浮层透明度 <span id="opacityVal" class="hint"></span></div>
+    <input type="range" id="opacity" min="20" max="100" value="100" />
+  </section>
+
+  <footer>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="siteDisabled" /><span>在此网站停用</span></label>
+      <button id="resetBtn" class="link">重置</button>
+    </div>
+    <div id="stateText" class="hint"></div>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

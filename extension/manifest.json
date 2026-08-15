@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "粒子背景 · Particle Background",
+  "version": "1.0.0",
+  "description": "给任意网页加上星座连线粒子背景：粒子网络、星云光晕、鼠标交互。主题自适应，不遮挡操作，可逐站开关。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "粒子背景",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "particle-background@example.com"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>星野 — 一篇关于粒子背景的文章</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f8f9fb; color: #23272f; font: 16px/1.9 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .nav { max-width: 760px; margin: 0 auto; padding: 22px 20px 0; display: flex; justify-content: space-between; color: #7a8290; font-size: 14px; }
+  article { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-size: 34px; line-height: 1.35; margin-bottom: 12px; font-weight: 750; }
+  .meta { color: #8b93a1; font-size: 14px; margin-bottom: 28px; }
+  h2 { font-size: 22px; margin: 34px 0 12px; }
+  p { margin-bottom: 16px; }
+  pre {
+    background: #23272f; color: #d6dce6; border-radius: 10px; padding: 16px 18px;
+    font: 13px/1.7 ui-monospace, "SF Mono", Consolas, monospace; margin: 18px 0; overflow-x: auto;
+  }
+  blockquote { border-left: 3px solid #5686fe; padding: 2px 0 2px 18px; color: #5b6472; margin: 20px 0; }
+</style>
+</head>
+<body>
+  <div class="nav"><span>星野 · 博客</span><span>关于</span></div>
+  <article>
+    <h1>给界面加一层会呼吸的星空</h1>
+    <div class="meta">发布于 2026-08 · 阅读 5 分钟 · 粒子背景</div>
+    <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：粒子缓慢漂移，
+    彼此靠近时自动连出细线，鼠标移过之处粒子微微靠拢、向光标延伸出光弧。</p>
+    <p>它在视觉上属于「加法中的减法」——不抢内容，只给单调的纯色背景增加一层
+    纵深与动感。而实现它的核心，不过是一个全屏 canvas 和几十行几何计算。</p>
+    <h2>原理：距离即缘分</h2>
+    <p>每一个粒子都有自己的位置与速度，每一帧更新位置并环绕边界。
+    连线规则极其简单：两两之间距离小于阈值就画一条透明度随距离衰减的线。</p>
+    <pre>for (i = 0; i &lt; particles.length; i++)
+  for (j = i + 1; j &lt; particles.length; j++)
+    if (distSq(i, j) &lt; linkDist * linkDist)
+      line(i, j, alpha = 1 - dist / linkDist);</pre>
+    <h2>氛围层：星云与星尘</h2>
+    <p>再往上叠加两层：缓慢漂移的星云光晕带来色彩深度，细小的星尘则负责闪烁的
+    细节。鼠标交互让静态的背景活了起来——光标就像一个引力中心。</p>
+    <blockquote>好的氛围装饰应该像呼吸一样自然：你看得见它，但从不觉得被打扰。</blockquote>
+    <p>最后，所有绘制都发生在内容层之下，pointer-events 关闭，滚动、点击、
+    文本选择都不受任何影响——装饰与功能，各行其道。</p>
+  </article>
+</body>
+</html>

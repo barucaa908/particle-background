@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Nebula — 让背景活起来</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0b0d12; color: #eef1f8; min-height: 100vh;
+    font: 16px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    padding: 60px 24px;
+  }
+  .badge {
+    display: inline-block; font-size: 13px; color: #a8c0ff; background: rgba(86, 134, 254, 0.14);
+    border: 1px solid rgba(86, 134, 254, 0.35); border-radius: 999px; padding: 5px 14px; margin-bottom: 26px;
+  }
+  h1 {
+    font-size: 58px; line-height: 1.15; font-weight: 780; max-width: 860px; letter-spacing: -0.5px;
+    background: linear-gradient(92deg, #ffffff 10%, #a8c0ff 55%, #8b5cf6 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 18px;
+  }
+  .sub { color: #9aa3b2; font-size: 19px; max-width: 620px; margin-bottom: 36px; }
+  .cta { display: flex; gap: 14px; justify-content: center; margin-bottom: 64px; }
+  .btn {
+    padding: 12px 30px; border-radius: 999px; font-size: 15px; font-weight: 600; cursor: pointer;
+    text-decoration: none; border: 1px solid transparent;
+  }
+  .btn.p { background: #5686fe; color: #fff; box-shadow: 0 8px 30px rgba(86, 134, 254, 0.35); }
+  .btn.g { background: transparent; color: #cdd4e0; border-color: #2c303c; }
+  .feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 940px; width: 100%; }
+  .f {
+    background: #14161d; border: 1px solid #23262f; border-radius: 14px; padding: 22px 20px; text-align: left;
+  }
+  .f .ic { width: 30px; height: 30px; border-radius: 9px; margin-bottom: 12px;
+    background: linear-gradient(135deg, rgba(86,134,254,.9), rgba(139,92,246,.7)); }
+  .f h3 { font-size: 16px; margin-bottom: 6px; }
+  .f p { color: #8a92a3; font-size: 13.5px; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="badge">✨ 全新 · 星座粒子背景</div>
+  <h1>让每个界面都<br />有一片会呼吸的星空</h1>
+  <div class="sub">星座连线、星云光晕、流星划过、鼠标交互 —— 主题自适应，不遮挡任何操作。</div>
+  <div class="cta">
+    <a class="btn p">立即体验</a>
+    <a class="btn g">查看文档</a>
+  </div>
+  <div class="feats">
+    <div class="f"><div class="ic"></div><h3>主题自适应</h3><p>自动读取页面背景，深色浅色都恰到好处。</p></div>
+    <div class="f"><div class="ic"></div><h3>两种模式</h3><p>背景模式藏在内容之下，浮层模式对任何网站都安全。</p></div>
+    <div class="f"><div class="ic"></div><h3>极致轻量</h3><p>零依赖、DPR 自适应、动效降级，几乎不占资源。</p></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "dsh-particle-background",
+  "version": "1.0.0",
+  "description": "DeepSeek Harness Web GUI 粒子背景：星座连线 + 星云光晕 + 鼠标交互，主题自适应",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  },
+  "files": [
+    "lib",
+    "client.js"
+  ],
+  "license": "MIT"
+}
