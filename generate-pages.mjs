@@ -25,7 +25,7 @@ function mulberry32(seed) {
 const THEMES = [
   { key: 'dark', bg: ['rgb(13,15,19)', 'rgb(23,26,33)'], text: '#e8ecf5', sub: '#9aa3b2', card: 'rgb(28,32,40)', line: '#2c303c' },
   { key: 'light', bg: ['rgb(246,247,250)', 'rgb(255,255,255)'], text: '#1a1d24', sub: '#5b6472', card: 'rgb(255,255,255)', line: '#e3e6ec' },
-  { key: 'mid', bg: ['rgb(118,128,146)', 'rgb(140,150,168)'], text: '#10131a', sub: '#2a2f3a', card: 'rgb(150,160,178)', line: '#0f1220' }
+  { key: 'mid', bg: ['rgb(124,130,140)', 'rgb(142,148,158)'], text: '#10131a', sub: '#2a2f3a', card: 'rgb(152,158,168)', line: '#0f1220' }
 ];
 
 /* 6 种背景样式：返回 { css, expectMode } */
