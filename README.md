@@ -118,7 +118,9 @@ dsh web
 | `shootingStars` | true | 流星开关（斜向划过、渐隐亮尾） |
 | `shootingInterval` | 5200 | 流星平均间隔（ms） |
 | `mouseRadius` | 170 | 鼠标影响半径（px） |
-| `mouseAttract` | 0.05 | 鼠标吸引力 |
+| `mouseAttract` | 0.07 | 鼠标吸引力 |
+| `friction` | 0.99 | 鼠标交互时的每帧速度阻尼（防发散；值越大甩动感越强） |
+| `maxSpeed` | 5.0 | 粒子最大速度（px/帧），有界版 v1.0.0：能甩出旋涡但不失控 |
 | `mouseLineOpacity` | 0.42 | 光标-粒子连线不透明度 |
 | `dprCap` | 2 | 设备像素比上限（性能） |
 

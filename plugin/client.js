@@ -51,9 +51,9 @@ window.__ModuleLoader__.load({
 		    stars: 90,                // 星尘数量
 		    nebula: true,             // 星云光晕层
 		    mouseRadius: 170,         // 鼠标影响半径 px
-		    mouseAttract: 0.05,       // 鼠标吸引力
-		    friction: 0.985,          // 每帧速度阻尼（防止鼠标吸引导致速度无限累积）
-		    maxSpeed: 3.0,            // 粒子最大速度 px/帧
+		    mouseAttract: 0.07,       // 鼠标吸引力（v1.0.0 手感：更强、更跟手）
+		    friction: 0.99,           // 每帧速度阻尼（防发散；比 v1.0.2 的 0.985 更软，保留甩动感）
+		    maxSpeed: 5.0,            // 粒子最大速度 px/帧（有界版 v1.0.0：能甩旋涡但不失控）
 		    mouseLineOpacity: 0.42,   // 光标-粒子连线不透明度
 		    mouseGlow: true,          // 光标处光晕（浮层模式下自动关闭，避免遮字）
 		    shootingStars: true,      // 流星
@@ -536,8 +536,8 @@ window.__ModuleLoader__.load({
 		      } else {
 		        /* 空闲自主漂移：缓慢的正弦扰动让粒子缓慢转向、幅度更足，
 		           又不至于乱飞（积分有界，且仍受 maxSpeed 上限约束） */
-		        p.vx += Math.sin(t * 0.001 + p.tw) * 0.0006;
-		        p.vy += Math.cos(t * 0.0012 + p.tw * 1.7) * 0.0006;
+		        p.vx += Math.sin(t * 0.001 + p.tw) * 0.0008;
+		        p.vy += Math.cos(t * 0.0012 + p.tw * 1.7) * 0.0008;
 		      }
 		      var sp2 = p.vx * p.vx + p.vy * p.vy;
 		      if (sp2 > cfg.maxSpeed * cfg.maxSpeed) {
