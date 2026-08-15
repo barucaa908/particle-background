@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>linear-light-dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body{background:linear-gradient(160deg,rgb(246,247,250),rgb(255,255,255))}
+  body { color: #1a1d24; font: 15px/1.8 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 32px; }
+  h1 { font-size: 30px; line-height: 1.35; margin-bottom: 10px; }
+  h2 { font-size: 20px; margin: 28px 0 10px; }
+  .meta { color: #5b6472; font-size: 13px; margin-bottom: 24px; }
+  p { margin-bottom: 14px; color: #1a1d24; }
+  pre { background: rgb(255,255,255); color: #333; border-radius: 10px; padding: 14px 16px; font: 12px/1.6 ui-monospace, Consolas, monospace; margin: 16px 0; overflow-x: auto; }
+  blockquote { border-left: 3px solid #3b5bd6; padding: 2px 0 2px 16px; color: #5b6472; margin: 18px 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .search { background: rgb(255,255,255); border: 1px solid #e3e6ec; border-radius: 9px; padding: 6px 14px; color: #5b6472; font-size: 13px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .card { background: rgb(255,255,255); border: 1px solid #e3e6ec; border-radius: 11px; padding: 14px; }
+  .card .k { color: #5b6472; font-size: 12px; }
+  .card .v { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .card .d { font-size: 12px; margin-top: 2px; }
+  .card .d.up { color: #22a06b; } .card .d.down { color: #d64545; }
+  .panel { background: rgb(255,255,255); border: 1px solid #e3e6ec; border-radius: 11px; padding: 16px; }
+  .panel h3 { font-size: 14px; margin-bottom: 12px; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 130px; }
+  .bars .b { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, #3b5bd6, #9db4f0); }
+  .hero { text-align: center; }
+  .badge { display: inline-block; font-size: 13px; padding: 5px 14px; border-radius: 999px; border: 1px solid #3b5bd6; color: #3b5bd6; background: transparent; margin-bottom: 22px; }
+  .hero h1 { font-size: 44px; margin-bottom: 14px; }
+  .sub { color: #5b6472; font-size: 17px; margin-bottom: 30px; }
+  .cta { display: flex; gap: 12px; justify-content: center; margin-bottom: 48px; }
+  .btn { padding: 11px 28px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+  .btn.p { background: #3b5bd6; color: #fff; }
+  .btn.g { border: 1px solid #e3e6ec; color: #1a1d24; }
+  .feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .f { background: rgb(255,255,255); border: 1px solid #e3e6ec; border-radius: 12px; padding: 18px 16px; text-align: left; }
+  .f .ic { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, #3b5bd6, #8b5cf6); margin-bottom: 10px; }
+  .f h3 { font-size: 15px; margin-bottom: 4px; }
+  .f p { color: #5b6472; font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+  <main class="wrap">
+    <div class="topbar"><h1>数据概览</h1><div class="search">搜索…</div></div>
+    <div class="cards"><div class="card"><div class="k">指标 1</div><div class="v">8,888</div><div class="d down">↓ 11.8%</div></div>
+      <div class="card"><div class="k">指标 2</div><div class="v">6,885</div><div class="d down">↓ 9.4%</div></div>
+      <div class="card"><div class="k">指标 3</div><div class="v">8,884</div><div class="d down">↓ 5.1%</div></div>
+      <div class="card"><div class="k">指标 4</div><div class="v">4,554</div><div class="d up">↑ 19.7%</div></div>
+      <div class="card"><div class="k">指标 5</div><div class="v">1,881</div><div class="d up">↑ 17.6%</div></div>
+      <div class="card"><div class="k">指标 6</div><div class="v">5,386</div><div class="d up">↑ 19.6%</div></div>
+      <div class="card"><div class="k">指标 7</div><div class="v">6,822</div><div class="d up">↑ 10.9%</div></div>
+      <div class="card"><div class="k">指标 8</div><div class="v">8,448</div><div class="d up">↑ 18.1%</div></div></div>
+    <div class="panel"><h3>趋势</h3><div class="bars"><div class="b" style="height:41%"></div><div class="b" style="height:82%"></div><div class="b" style="height:93%"></div><div class="b" style="height:31%"></div><div class="b" style="height:48%"></div><div class="b" style="height:80%"></div><div class="b" style="height:67%"></div><div class="b" style="height:35%"></div><div class="b" style="height:36%"></div><div class="b" style="height:52%"></div><div class="b" style="height:61%"></div><div class="b" style="height:76%"></div></div></div>
+  </main>
+</body>
+</html>

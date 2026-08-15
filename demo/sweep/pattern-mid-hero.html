@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>pattern-mid-hero</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body{background:repeating-linear-gradient(45deg,rgb(118,128,146) 0 14px,rgb(140,150,168) 14px 28px)}
+  body { color: #10131a; font: 15px/1.8 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 32px; }
+  h1 { font-size: 30px; line-height: 1.35; margin-bottom: 10px; }
+  h2 { font-size: 20px; margin: 28px 0 10px; }
+  .meta { color: #2a2f3a; font-size: 13px; margin-bottom: 24px; }
+  p { margin-bottom: 14px; color: #10131a; }
+  pre { background: rgb(150,160,178); color: #d6dce6; border-radius: 10px; padding: 14px 16px; font: 12px/1.6 ui-monospace, Consolas, monospace; margin: 16px 0; overflow-x: auto; }
+  blockquote { border-left: 3px solid #3b5bd6; padding: 2px 0 2px 16px; color: #2a2f3a; margin: 18px 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .search { background: rgb(150,160,178); border: 1px solid #0f1220; border-radius: 9px; padding: 6px 14px; color: #2a2f3a; font-size: 13px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .card { background: rgb(150,160,178); border: 1px solid #0f1220; border-radius: 11px; padding: 14px; }
+  .card .k { color: #2a2f3a; font-size: 12px; }
+  .card .v { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .card .d { font-size: 12px; margin-top: 2px; }
+  .card .d.up { color: #22a06b; } .card .d.down { color: #d64545; }
+  .panel { background: rgb(150,160,178); border: 1px solid #0f1220; border-radius: 11px; padding: 16px; }
+  .panel h3 { font-size: 14px; margin-bottom: 12px; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 130px; }
+  .bars .b { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, #3b5bd6, #2b4fa8); }
+  .hero { text-align: center; }
+  .badge { display: inline-block; font-size: 13px; padding: 5px 14px; border-radius: 999px; border: 1px solid #3b5bd6; color: #3b5bd6; background: transparent; margin-bottom: 22px; }
+  .hero h1 { font-size: 44px; margin-bottom: 14px; }
+  .sub { color: #2a2f3a; font-size: 17px; margin-bottom: 30px; }
+  .cta { display: flex; gap: 12px; justify-content: center; margin-bottom: 48px; }
+  .btn { padding: 11px 28px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+  .btn.p { background: #3b5bd6; color: #fff; }
+  .btn.g { border: 1px solid #0f1220; color: #10131a; }
+  .feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .f { background: rgb(150,160,178); border: 1px solid #0f1220; border-radius: 12px; padding: 18px 16px; text-align: left; }
+  .f .ic { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, #3b5bd6, #8b5cf6); margin-bottom: 10px; }
+  .f h3 { font-size: 15px; margin-bottom: 4px; }
+  .f p { color: #2a2f3a; font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+  <div class="wrap hero">
+    <div class="badge">✨ 星座粒子背景</div>
+    <h1>让每个界面都有一片会呼吸的星空</h1>
+    <div class="sub">星座连线、星云光晕、流星划过、鼠标交互——主题自适应，不遮挡操作。</div>
+    <div class="cta"><a class="btn p">立即体验</a><a class="btn g">查看文档</a></div>
+    <div class="feats"><div class="f"><div class="ic"></div><h3>特性 1</h3><p>自动读取页面背景，深色浅色都恰到好处。</p></div>
+      <div class="f"><div class="ic"></div><h3>特性 2</h3><p>背景模式藏在内容之下，浮层模式对任何网站都安全。</p></div>
+      <div class="f"><div class="ic"></div><h3>特性 3</h3><p>自动读取页面背景，深色浅色都恰到好处。</p></div></div>
+  </div>
+</body>
+</html>

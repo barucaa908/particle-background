@@ -35,6 +35,10 @@ DSH粒子背景/
 ├── install-now.js        # 即时注入脚本（打补丁到运行中的 dist，无需重启）
 ├── inspect-dom.mjs       # 调试工具：无头浏览器抓取 GUI 渲染 DOM
 ├── test-extension.mjs    # 端到端实测扩展（自动选 Edge）
+├── generate-pages.mjs    # 生成 54 页多样化验证页面（demo/sweep/）
+├── sweep-test.mjs        # 50+ 页面大规模验证：逐页等待/截图/像素分析/异常捕获
+├── test-loop.mjs         # 粒子运动循环确定性测试（速度不发散回归）
+├── png-decode.mjs        # 标准 PNG 解码器（截图像素分析，已与 System.Drawing 交叉验证）
 ├── screenshot-extension.mjs # 生成商店上架截图（Edge headless + 扩展）
 ├── demo/                 # 截图用的演示页面（深色看板/浅色博客/深色落地页）
 ├── release/              # 打包好的扩展 zip + 上架截图

@@ -2,6 +2,9 @@
 node_modules/
 *.log
 
+# 大规模验证的截图产物（可重新生成）
+demo/sweep-shots/
+
 # 编辑器
 .vscode/
 .idea/
