@@ -174,6 +174,21 @@
     return !!s && s !== 'transparent' && s.indexOf('0, 0, 0, 0') === -1;
   }
 
+  /* 选取透明化扫描根：#root 为空壳（如 MSN 残留的空 div）时回退到 body */
+  function pickScanRoot() {
+    if (cfg && cfg.root && cfg.root.nodeType === 1) return cfg.root;
+    var r = document.getElementById('root');
+    if (r && r.children.length > 0) return r;
+    return document.body;
+  }
+
+  /* 颜色饱和度：max(r,g,b)-min(r,g,b)，越大越鲜艳 */
+  function chroma(c) {
+    var mx = Math.max(c.r, c.g, c.b);
+    var mn = Math.min(c.r, c.g, c.b);
+    return (mx - mn) / 255;
+  }
+
   /* ============================== 主题读取 ============================== */
   /**
    * body/html 背景透明时，找「覆盖视口 ≥60% 的大容器纯色背景」
@@ -201,8 +216,13 @@
         if (area < minArea) continue;
         var bg = getComputedStyle(c).backgroundColor;
         if (isOpaqueColor(bg) && area > bestArea) {
-          bestArea = area;
-          best = bg;
+          /* 只认接近中性色的容器（白色/灰/黑）；鲜艳的蓝色块不是页面底色，
+             否则画布会被填成整屏蓝 */
+          var cc = parseRgb(bg);
+          if (chroma(cc) <= 0.30) {
+            bestArea = area;
+            best = bg;
+          }
         }
         stack.push(c);
       }
@@ -306,9 +326,9 @@
       particles.push({
         x: Math.random() * W,
         y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.34,
-        vy: (Math.random() - 0.5) * 0.34,
-        r: 1 + Math.random() * 1.7,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        r: 1.2 + Math.random() * 1.8,
         tw: Math.random() * Math.PI * 2,
         accent: Math.random() < 0.15
       });
@@ -399,8 +419,11 @@
 
     ctx.save();
     if (overlay) {
-      // 浮层模式：浅色页面自动再减淡 40%，避免粒子抢过正文
-      ctx.globalAlpha = cfg.overlayAlpha * (theme.dark ? 1 : 0.6);
+      /* 浮层模式每帧必须清空：否则粒子/鼠标线会留下永不消失的拖尾，
+         长时间使用后整张画布积成一层淡蓝薄雾（"大面积蓝色"的来源） */
+      ctx.clearRect(0, 0, W, H);
+      // 浮层模式：浅色页面自动减淡 25%，避免粒子抢过正文
+      ctx.globalAlpha = cfg.overlayAlpha * (theme.dark ? 1 : 0.75);
       // 深色页面用 screen 混合：只加光、不压暗文字；浅色页面保持正常混合
       if (theme.dark) ctx.globalCompositeOperation = 'screen';
     }
@@ -478,10 +501,10 @@
     for (i = 0; i < particles.length; i++) {
       p = particles[i];
       var alpha = cfg.dotOpacity;
-      if (cfg.twinkle) alpha *= 0.55 + 0.45 * Math.sin(t * 0.0016 + p.tw);
+      if (cfg.twinkle) alpha *= 0.65 + 0.35 * Math.sin(t * 0.0016 + p.tw);
       ctx.fillStyle = rgba(p.accent ? theme.accent : theme.dot, alpha);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r * (overlay ? 0.85 : 1), 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -500,10 +523,12 @@
           p.vy += (dy / d) * f;
         }
       }
-      /* 阻尼 + 速度上限：鼠标吸引是逐帧加速度，若无衰减速度会无限累积，
-         粒子最终满屏乱飞、连线织成密网盖住内容（点化成线） */
-      p.vx *= cfg.friction;
-      p.vy *= cfg.friction;
+      /* 阻尼只在鼠标吸引生效时启用（防止逐帧加速度无限累积）；
+         空闲时保留初始漂移速度，粒子不会"冻成静态点" */
+      if (mouse.active) {
+        p.vx *= cfg.friction;
+        p.vy *= cfg.friction;
+      }
       var sp2 = p.vx * p.vx + p.vy * p.vy;
       if (sp2 > cfg.maxSpeed * cfg.maxSpeed) {
         var sp = Math.sqrt(sp2);
@@ -597,7 +622,7 @@
    */
   function transparentize() {
     if (cfg.mode === 'overlay') return;   // 浮层模式不碰页面背景
-    var root = cfg.root || document.getElementById('root') || document.body;
+    var root = pickScanRoot();
     if (!root) return;
     var base = rgb(theme.bg);
     var stack = [root];
@@ -622,7 +647,9 @@
           var hasImage = img && img !== 'none';
           var big = cover >= 0.60;
           var matchesBase = bg === base;
-          if ((big && (opaqueColor || hasImage)) || matchesBase) {
+          /* 只移除纯色大容器；带背景图的大容器是页面视觉的一部分，不透明化
+             （否则图片被挖掉、露出画布纯色，形成"色块污染"） */
+          if ((big && opaqueColor && !hasImage) || matchesBase) {
             var tracked = false;
             for (var t = 0; t < transparentized.length; t++) {
               if (transparentized[t].el === c) { tracked = true; break; }
@@ -788,7 +815,7 @@
 
     /* 应用结构变化 → 持续补扫透明化 */
     if (cfg.transparentize && !overlay) {
-      var scanRoot = cfg.root || document.getElementById('root') || document.body;
+      var scanRoot = pickScanRoot();
       if (scanRoot) {
         rootObserver = new MutationObserver(function () { scheduleScan(); });
         rootObserver.observe(scanRoot, { childList: true, subtree: true });

@@ -216,7 +216,9 @@ try {
     const c1 = r.comp1 || {}, c2 = r.comp2 || {};
     const m = r.m2 || {};
     const modeOk = !r.local || (m.present && ((r.expect === 'behind' && m.z === '-1') || (r.expect === 'overlay' && m.z === '2147483000')));
-    const visible = m.present && (r.expect === 'overlay' ? m.drawnFrac > 0.002 : m.nonBgFrac > 0.0005);
+    // 浮层模式每帧清屏（不累积拖尾），drawnFrac 反映瞬时渲染：
+    // 旧阈值 0.002 是在拖尾把指标虚高的时代定的，瞬时基线约为 0.0015~0.0025
+    const visible = m.present && (r.expect === 'overlay' ? m.drawnFrac > 0.001 : m.nonBgFrac > 0.0005);
     const noWash = (m.blueFrac === undefined || m.blueFrac < 0.35) && (c2.blueFrac === undefined || c2.blueFrac < 0.5);
     const rendered = !c2.error && (c2.std > 2 || c2.contentPix > 0.005);
     const holdOk = !r.holdMouse || (m.blueFrac !== undefined && m.blueFrac < 0.4);
