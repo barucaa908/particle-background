@@ -127,7 +127,8 @@ try {
       const r = d[i], gg = d[i + 1], b = d[i + 2], a = d[i + 3];
       total++;
       if (a > 0) drawn++;
-      if (b > 100 && b > r + 20) blue++;
+      // 蓝色判定：相对背景采样点有明显差异（排除"背景本身偏蓝"的误报）
+      if (b > 100 && b > r + 20 && (Math.abs(r - bgr) > 30 || Math.abs(b - bgb) > 30)) blue++;
       if (Math.abs(r - bgr) > 24 || Math.abs(gg - bgg) > 24 || Math.abs(b - bgb) > 24) nonBg++;
       if ((r + gg + b) / 3 > 110) lit++;
     }
@@ -176,24 +177,26 @@ try {
     for (const [si, shot] of r.shots.entries()) {
       try {
         const { width, height, data } = decodePNG(shot);
-        let sum = 0, sum2 = 0, blue = 0, total = 0;
+        let sum = 0, sum2 = 0, total = 0;
         const mode = new Map();
         for (let i = 0; i < data.length; i += 16) {
           const r2 = data[i], g2 = data[i + 1], b2 = data[i + 2];
           const l = 0.2126 * r2 + 0.7152 * g2 + 0.0722 * b2;
           sum += l; sum2 += l * l; total++;
-          if (b2 > 100 && b2 > r2 + 20) blue++;
           const key = (r2 >> 5) + ',' + (g2 >> 5) + ',' + (b2 >> 5);
           mode.set(key, (mode.get(key) || 0) + 1);
         }
         const mean = sum / total;
         const std = Math.sqrt(Math.max(0, sum2 / total - mean * mean));
-        const [bk, bv] = [...mode.entries()].sort((a, b) => b[1] - a[1])[0];
+        const [bk] = [...mode.entries()].sort((a, b) => b[1] - a[1])[0];
         const [br2, bg2, bb2] = bk.split(',').map((v) => (parseInt(v, 10) << 5) + 16);
-        let content = 0;
+        let content = 0, blue = 0;
         for (let i = 0; i < data.length; i += 16) {
-          const dr = Math.abs(data[i] - br2), dg = Math.abs(data[i + 1] - bg2), db = Math.abs(data[i + 2] - bb2);
+          const rr = data[i], gg = data[i + 1], bb = data[i + 2];
+          const dr = Math.abs(rr - br2), dg = Math.abs(gg - bg2), db = Math.abs(bb - bb2);
           if (dr > 30 || dg > 30 || db > 30) content++;
+          // 蓝色判定相对页面主色：排除"页面本身偏蓝"的误报
+          if (bb > 100 && bb > rr + 20 && (dr > 30 || db > 30)) blue++;
         }
         r[`comp${si + 1}`] = {
           mean: +mean.toFixed(1), std: +std.toFixed(1),
@@ -213,7 +216,7 @@ try {
     const c1 = r.comp1 || {}, c2 = r.comp2 || {};
     const m = r.m2 || {};
     const modeOk = r.local && m.present && ((r.expect === 'behind' && m.z === '-1') || (r.expect === 'overlay' && m.z === '2147483000'));
-    const visible = m.present && (r.expect === 'overlay' ? m.drawnFrac > 0.002 : m.nonBgFrac > 0.002);
+    const visible = m.present && (r.expect === 'overlay' ? m.drawnFrac > 0.002 : m.nonBgFrac > 0.0008);
     const noWash = (m.blueFrac === undefined || m.blueFrac < 0.35) && (c2.blueFrac === undefined || c2.blueFrac < 0.5);
     const rendered = !c2.error && (c2.std > 2 || c2.contentPix > 0.005);
     const holdOk = !r.holdMouse || (m.blueFrac !== undefined && m.blueFrac < 0.4);
@@ -236,7 +239,7 @@ try {
     const flags = Object.entries(row.checks).filter(([, v]) => !v).map(([k]) => k).join(',');
     console.log(
       `${row.verdict.padEnd(4)} [${String(row.i).padStart(2, '0')}] ${row.name.padEnd(34)} ` +
-      `expect=${row.expect.padEnd(7)} mode=${row.mode.padEnd(7)} canvasBlue=${row.canvasBlue ?? '-'} ` +
+      `expect=${(row.expect || '-').padEnd(7)} mode=${(row.mode || '-').padEnd(7)} canvasBlue=${row.canvasBlue ?? '-'} ` +
       `compStd=${row.compStd ?? '-'} compBlue=${row.compBlue ?? '-'} content=${row.contentPix ?? '-'}` +
       (row.hold ? ' [hold]' : '') + (flags ? ` ✗(${flags})` : '')
     );

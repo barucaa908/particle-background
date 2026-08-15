@@ -65,7 +65,7 @@
         return true;
       }
       // body/html 透明但大容器有纯色背景（常见布局）：也应走背景模式
-      var els = document.body.querySelectorAll('div,main,section');
+      var els = document.body.querySelectorAll('div,main,section,article,aside,header,footer,nav');
       for (var i = 0; i < els.length; i++) {
         var r = els[i].getBoundingClientRect();
         if (r.width * r.height >= innerWidth * innerHeight * 0.6) {

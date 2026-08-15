@@ -145,9 +145,6 @@
       var kids = el.children;
       for (var i = 0; i < kids.length; i++) {
         var c = kids[i];
-        if (c === canvas) continue;                    // 跳过粒子画布自身
-        var pos = getComputedStyle(c).position;
-        if (pos === 'fixed' || pos === 'absolute') continue; // 悬浮层不是页面背景
         var r = c.getBoundingClientRect();
         var area = r.width * r.height;
         if (area < minArea) continue;

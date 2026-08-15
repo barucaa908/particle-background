@@ -132,11 +132,48 @@ window.__ModuleLoader__.load({
 		  }
 		
 		  /* ============================== 主题读取 ============================== */
+		  /**
+		   * body/html 背景透明时，找「覆盖视口 ≥60% 的大容器纯色背景」
+		   * （常见布局：body 透明 + 内容容器上色）。这样透明 body 页面也能拿到正确主题，
+		   * 而不是回退到系统偏好导致画布颜色与页面不符。
+		   */
+		  function findContainerBg() {
+		    var root = document.body;
+		    if (!root) return null;
+		    var minArea = (global.innerWidth || 1280) * (global.innerHeight || 800) * 0.6;
+		    var stack = [root];
+		    var best = null;
+		    var bestArea = 0;
+		    var guard = 0;
+		    while (stack.length > 0 && guard++ < 400) {
+		      var el = stack.pop();
+		      var kids = el.children;
+		      for (var i = 0; i < kids.length; i++) {
+		        var c = kids[i];
+		        if (c === canvas) continue;                    // 跳过粒子画布自身
+		        var pos = getComputedStyle(c).position;
+		        if (pos === 'fixed' || pos === 'absolute') continue; // 悬浮层不是页面背景
+		        var r = c.getBoundingClientRect();
+		        var area = r.width * r.height;
+		        if (area < minArea) continue;
+		        var bg = getComputedStyle(c).backgroundColor;
+		        if (isOpaqueColor(bg) && area > bestArea) {
+		          bestArea = area;
+		          best = bg;
+		        }
+		        stack.push(c);
+		      }
+		    }
+		    return best;
+		  }
+		
 		  function readBgColor() {
 		    var cs = getComputedStyle(document.body);
 		    var bg = cs.backgroundColor;
 		    if (isOpaqueColor(bg)) return { value: bg, solid: true };
 		    bg = getComputedStyle(document.documentElement).backgroundColor;
+		    if (isOpaqueColor(bg)) return { value: bg, solid: true };
+		    bg = findContainerBg();
 		    if (isOpaqueColor(bg)) return { value: bg, solid: true };
 		    var v = cs.getPropertyValue(cfg.bgVar).trim();
 		    if (isOpaqueColor(v)) return { value: v, solid: false };
