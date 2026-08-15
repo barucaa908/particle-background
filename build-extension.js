@@ -18,7 +18,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = here; // 脚本位于项目根目录
 const extDir = join(here, 'extension');
 const releaseDir = join(here, 'release');
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 /* ============================== PNG 编码 ============================== */
 const CRC_TABLE = (() => {

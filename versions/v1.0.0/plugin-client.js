@@ -51,7 +51,7 @@ window.__ModuleLoader__.load({
 		    mouseRadius: 170,         // 鼠标影响半径 px
 		    mouseAttract: 0.05,       // 鼠标吸引力
 		    mouseLineOpacity: 0.42,   // 光标-粒子连线不透明度
-		    mouseGlow: true,          // 光标处光晕（浮层模式下自动关闭，避免遮字）
+		    mouseGlow: true,          // 光标处光晕
 		    shootingStars: true,      // 流星
 		    shootingInterval: 5200,   // 流星平均间隔 ms
 		    dprCap: 2,                // 设备像素比上限
@@ -59,7 +59,7 @@ window.__ModuleLoader__.load({
 		    accentVar: '--dsw-static-deepseek-450',
 		    mode: 'behind',           // 'behind' | 'overlay'
 		    density: 1,               // 粒子密度倍率
-		    overlayAlpha: 0.5,        // overlay 模式全局透明度
+		    overlayAlpha: 0.55,       // overlay 模式全局透明度
 		    zIndex: null,             // 显式画布 z-index（null → 自动）
 		    transparentize: true,     // behind 模式是否透明化大背景容器
 		    root: null,               // 透明化扫描根（null → #root 或 body）
@@ -313,19 +313,14 @@ window.__ModuleLoader__.load({
 		    var overlay = cfg.mode === 'overlay';
 		
 		    ctx.save();
-		    if (overlay) {
-		      ctx.globalAlpha = cfg.overlayAlpha;
-		      // 深色页面用 screen 混合：只加光、不压暗文字；浅色页面保持正常混合
-		      if (theme.dark) ctx.globalCompositeOperation = 'screen';
-		    }
+		    if (overlay) ctx.globalAlpha = cfg.overlayAlpha;
 		
 		    if (!overlay) {
 		      ctx.fillStyle = rgb(theme.bg);
 		      ctx.fillRect(0, 0, W, H);
 		    }
 		
-		    /* 星云光晕是背景氛围层：浮层模式下不绘制，避免大面积色块盖住内容 */
-		    if (cfg.nebula && !overlay) drawNebula(t);
+		    if (cfg.nebula) drawNebula(t);
 		
 		    if (cfg.shootingStars && !reduced) drawShooters(t);
 		
@@ -379,7 +374,7 @@ window.__ModuleLoader__.load({
 		          ctx.stroke();
 		        }
 		      }
-		      if (cfg.mouseGlow && !overlay && sprites.length > 0) {
+		      if (cfg.mouseGlow && sprites.length > 0) {
 		        var gs = cfg.mouseRadius * 1.4;
 		        ctx.drawImage(sprites[0], mouse.x - gs / 2, mouse.y - gs / 2, gs, gs);
 		      }

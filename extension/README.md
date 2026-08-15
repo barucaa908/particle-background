@@ -1,4 +1,4 @@
-# 粒子背景 · 浏览器扩展（Chrome / Edge / Firefox）
+﻿# 粒子背景 · 浏览器扩展（Chrome / Edge / Firefox）
 
 给任意网页加上星座连线粒子背景：粒子网络、星云光晕、星尘闪烁、鼠标交互。
 主题自适应（深色/浅色页面自动配色），不遮挡任何操作，可逐站开关。
@@ -15,7 +15,7 @@
 
 ### 方式二：直接安装 zip（Chrome 137+ / Edge）
 
-- 把 `../release/particle-background-v1.0.0.zip` **直接拖进** `chrome://extensions` 页面
+- 把 `../release/particle-background-v1.0.1.zip` **直接拖进** `chrome://extensions` 页面
   （需要开发者模式）即可安装
 - 命令行方式：`chrome --load-extension="...\extension"`（注意：品牌版 Chrome 137+
   已屏蔽命令行加载，请用手动方式或 Edge）
@@ -24,7 +24,7 @@
 
 **Chrome Web Store（需 $5 一次性开发者注册费）：**
 1. 访问 https://chrome.google.com/webstore/devconsole 注册开发者账号（$5）
-2. 点"添加新项目"，上传 `../release/particle-background-v1.0.0.zip`
+2. 点"添加新项目"，上传 `../release/particle-background-v1.0.1.zip`
 3. 填写商店信息：名称、描述、截图（1280×800 至少 1 张）、分类、语言
 4. 提交审核（通常 1~3 天），通过后任何人搜索"粒子背景"即可安装
 

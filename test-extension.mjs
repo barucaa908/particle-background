@@ -43,10 +43,34 @@ const TEST_HTML = `<!doctype html>
 </body>
 </html>`;
 
+const GRADIENT_HTML = `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>浮层模式测试页（渐变背景）</title>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    /* 无纯色背景 → 自动模式应解析为浮层模式 */
+    body { background: linear-gradient(160deg, #10131c, #1d2438 55%, #0d1117); color: #e8ecf5; font-family: sans-serif; }
+    main { padding: 60px; }
+    h1 { color: #fff; } p { color: #9aa3b2; max-width: 640px; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>浮层模式 · 渐变背景页</h1>
+    <p>本页无纯色背景，扩展应使用浮层模式：粒子悬浮在上方、低透明度、不遮文字，
+    且不应注入 body 透明化样式。</p>
+  </main>
+</body>
+</html>`;
+
 /* 本地 HTTP 服务器 */
 const server = http.createServer((req, res) => {
+  const path = req.url.split('?')[0];
+  const html = path.includes('gradient') ? GRADIENT_HTML : TEST_HTML;
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-  res.end(TEST_HTML);
+  res.end(html);
 });
 await new Promise((r) => server.listen(HTTP_PORT, '127.0.0.1', r));
 
@@ -154,6 +178,23 @@ try {
     exceptions.slice(0, 10).forEach((e) => console.log('- ' + e));
   }
 
+  /* 渐变背景页：自动模式应解析为浮层模式，不透明化 body，z-index 为最大值 */
+  await send('Page.navigate', { url: `http://127.0.0.1:${HTTP_PORT}/gradient.html` });
+  await sleep(6000);
+  const state3 = await evalPage(`(() => {
+    const canvas = document.getElementById('dsh-particle-canvas');
+    const style = document.getElementById('dsh-particle-style');
+    return {
+      canvasPresent: !!canvas,
+      canvasZ: canvas ? getComputedStyle(canvas).zIndex : null,
+      canvasBg: canvas ? getComputedStyle(canvas).backgroundColor : null,
+      styleInjected: !!style,
+      bodyBg: getComputedStyle(document.body).backgroundColor
+    };
+  })()`);
+  console.log('===== 渐变背景页（自动模式 → 应解析为浮层模式） =====');
+  console.log(JSON.stringify(state3, null, 1));
+
   /* 切到 DSH GUI：扩展应跳过（页面已有内置粒子层） */
   console.error('[test] 访问 DSH GUI 检查不重复挂载…');
   await send('Page.navigate', { url: 'http://127.0.0.1:3080/' });
@@ -170,6 +211,9 @@ try {
     state1.canvasZ === '-1' &&
     state1.styleInjected === true &&
     state1.wrapBgInline === 'transparent' &&
+    state3.canvasPresent === true &&
+    state3.canvasZ === '2147483000' &&
+    state3.styleInjected === false &&
     state2.canvasCount <= 1;
   console.log(pass ? '\n✅ 扩展实测通过' : '\n❌ 实测未通过，见上方输出');
   process.exitCode = pass ? 0 : 1;

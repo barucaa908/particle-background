@@ -60,8 +60,20 @@
     try {
       var b = getComputedStyle(document.body).backgroundColor;
       var h = getComputedStyle(document.documentElement).backgroundColor;
-      return (b && b !== 'transparent' && b.indexOf('0, 0, 0, 0') === -1) ||
-        (h && h !== 'transparent' && h.indexOf('0, 0, 0, 0') === -1);
+      if ((b && b !== 'transparent' && b.indexOf('0, 0, 0, 0') === -1) ||
+        (h && h !== 'transparent' && h.indexOf('0, 0, 0, 0') === -1)) {
+        return true;
+      }
+      // body/html 透明但大容器有纯色背景（常见布局）：也应走背景模式
+      var els = document.body.querySelectorAll('div,main,section');
+      for (var i = 0; i < els.length; i++) {
+        var r = els[i].getBoundingClientRect();
+        if (r.width * r.height >= innerWidth * innerHeight * 0.6) {
+          var bg = getComputedStyle(els[i]).backgroundColor;
+          if (bg && bg !== 'transparent' && bg.indexOf('0, 0, 0, 0') === -1) return true;
+        }
+      }
+      return false;
     } catch (e) {
       return false;
     }
@@ -88,7 +100,7 @@
       mouseAttract: s.fxMouse === false ? 0 : undefined,
       mouseLineOpacity: s.fxMouse === false ? 0 : undefined,
       mouseGlow: s.fxMouse !== false,
-      overlayAlpha: (s.opacity / 100) * 0.6
+      overlayAlpha: (s.opacity / 100) * 0.45
     };
   }
 
