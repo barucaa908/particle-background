@@ -326,8 +326,8 @@
       particles.push({
         x: Math.random() * W,
         y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
+        vx: (Math.random() - 0.5) * 0.7,
+        vy: (Math.random() - 0.5) * 0.7,
         r: 1.2 + Math.random() * 1.8,
         tw: Math.random() * Math.PI * 2,
         accent: Math.random() < 0.15
@@ -528,6 +528,11 @@
       if (mouse.active) {
         p.vx *= cfg.friction;
         p.vy *= cfg.friction;
+      } else {
+        /* 空闲自主漂移：缓慢的正弦扰动让粒子缓慢转向、幅度更足，
+           又不至于乱飞（积分有界，且仍受 maxSpeed 上限约束） */
+        p.vx += Math.sin(t * 0.001 + p.tw) * 0.0006;
+        p.vy += Math.cos(t * 0.0012 + p.tw * 1.7) * 0.0006;
       }
       var sp2 = p.vx * p.vx + p.vy * p.vy;
       if (sp2 > cfg.maxSpeed * cfg.maxSpeed) {
