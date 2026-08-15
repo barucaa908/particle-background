@@ -5,7 +5,7 @@
  *   · 星座连线粒子网络（粒子之间近距离自动连线）
  *   · 星云光晕（品牌蓝 + 紫，缓慢漂移，Lissajous 轨迹）
  *   · 微光星尘（细小星点闪烁，极缓漂移）
- *   · 鼠标交互（光标附近粒子被吸引、连线、光晕）
+ *   · 鼠标/触摸交互（光标或手指附近粒子被吸引、连线、光晕）
  *   · 两种渲染模式：
  *       behind  —— 画布藏在内容层之下（z-index:-1），可透明化大背景容器
  *       overlay —— 画布浮在页面上方（pointer-events:none），低透明度氛围层，
@@ -16,6 +16,8 @@
  *
  * 对外接口：globalThis.DSH_Particles = { mount, dispose, CONFIG }
  *   mount(options?) -> disposer
+ *   再次调用 mount 可重配置（自动停止旧实例并应用新参数）；
+ *   卸载（dispose）会还原被透明化的页面背景，不留副作用。
  *   options 覆盖 CONFIG（见 defaultCfg），另有：
  *     mode: 'behind' | 'overlay'   （默认 'behind'）
  *     density: 1                   粒子密度倍率
@@ -98,12 +100,58 @@
   var scanTimer = null;
   var lastScanAt = 0;
   var MIN_SCAN_INTERVAL = 800;
+  var transparentized = [];   // 被本实例透明化的元素快照（{el, prev}），卸载时还原
+  var themeTimer = null;      // 主题变化防抖定时器
+  var reducedMedia = null;    // prefers-reduced-motion 运行期监听
+  var reducedChangeHandler = null;
+  var ownerToken = null;      // 本实例在画布上的所有权标识（防止多副本双绘）
+  var styleEl = null;         // 本实例注入的 <style>
+  var colorCtx = null;        // 颜色归一化用离屏 canvas（支持 hex/hsl/oklch 等）
 
   /* ============================== 工具函数 ============================== */
+  /**
+   * 把任意 CSS 颜色字符串解析为 {r,g,b}。
+   * 先用正则吃 rgb()/rgba()；其余（hex/hsl/oklch/命名色/var 链等）
+   * 交给 canvas 2D 上下文归一化，兼容现代 CSS 颜色空间。
+   */
   function parseRgb(str) {
     var m = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(str || '');
-    if (!m) return { r: 21, g: 21, b: 23 };
-    return { r: +m[1], g: +m[2], b: +m[3] };
+    if (m) return { r: +m[1], g: +m[2], b: +m[3] };
+    var out = normalizeColor(str);
+    m = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(out || '');
+    if (m) return { r: +m[1], g: +m[2], b: +m[3] };
+    m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(out || '');
+    if (m) {
+      var h = m[1];
+      if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+      return {
+        r: parseInt(h.slice(0, 2), 16),
+        g: parseInt(h.slice(2, 4), 16),
+        b: parseInt(h.slice(4, 6), 16)
+      };
+    }
+    return { r: 21, g: 21, b: 23 };
+  }
+
+  /* 用离屏 canvas 把任意 CSS 颜色归一化成标准串（不改动页面 DOM） */
+  function normalizeColor(str) {
+    if (!str || typeof document === 'undefined') return '';
+    try {
+      if (!colorCtx) {
+        var c = document.createElement('canvas');
+        c.width = 1;
+        c.height = 1;
+        colorCtx = c.getContext('2d');
+      }
+      if (!colorCtx) return '';
+      var prev = colorCtx.fillStyle;
+      colorCtx.fillStyle = str;
+      var out = colorCtx.fillStyle;
+      colorCtx.fillStyle = prev;
+      return out || '';
+    } catch (e) {
+      return '';
+    }
   }
 
   function lum(c) {
@@ -343,12 +391,16 @@
 
   function drawFrame(t) {
     var i, j, p, q, dx, dy, d2;
-    var linkD2 = cfg.linkDistance * cfg.linkDistance;
     var overlay = cfg.mode === 'overlay';
+    // 浮层模式悬浮在内容之上：连线明显缩短并减淡，避免"网格罩在文字上"
+    var linkDist = overlay ? cfg.linkDistance * 0.55 : cfg.linkDistance;
+    var linkD2 = linkDist * linkDist;
+    var lineAlphaMul = overlay ? 0.35 : 1;
 
     ctx.save();
     if (overlay) {
-      ctx.globalAlpha = cfg.overlayAlpha;
+      // 浮层模式：浅色页面自动再减淡 40%，避免粒子抢过正文
+      ctx.globalAlpha = cfg.overlayAlpha * (theme.dark ? 1 : 0.6);
       // 深色页面用 screen 混合：只加光、不压暗文字；浅色页面保持正常混合
       if (theme.dark) ctx.globalCompositeOperation = 'screen';
     }
@@ -361,13 +413,14 @@
     /* 星云光晕是背景氛围层：浮层模式下不绘制，避免大面积色块盖住内容 */
     if (cfg.nebula && !overlay) drawNebula(t);
 
-    if (cfg.shootingStars && !reduced) drawShooters(t);
+    /* 浅色页浮层不画流星（流星的亮尾也是线，可能划过正文） */
+    if (cfg.shootingStars && !reduced && !(overlay && !theme.dark)) drawShooters(t);
 
     if (cfg.starfield) {
       for (i = 0; i < stars.length; i++) {
         p = stars[i];
         var sa = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.0012 + p.tw));
-        ctx.fillStyle = rgba(theme.dark ? { r: 220, g: 230, b: 255 } : { r: 60, g: 82, b: 140 }, sa * 0.5);
+        ctx.fillStyle = rgba(theme.dark ? { r: 220, g: 230, b: 255 } : { r: 60, g: 82, b: 140 }, sa * (overlay ? 0.32 : 0.5));
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();
@@ -378,26 +431,29 @@
       }
     }
 
-    ctx.lineWidth = 1;
-    for (i = 0; i < particles.length; i++) {
-      p = particles[i];
-      for (j = i + 1; j < particles.length; j++) {
-        q = particles[j];
-        dx = p.x - q.x;
-        dy = p.y - q.y;
-        d2 = dx * dx + dy * dy;
-        if (d2 < linkD2) {
-          var a = (1 - Math.sqrt(d2) / cfg.linkDistance) * cfg.lineOpacity;
-          ctx.strokeStyle = rgba(theme.line, a);
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(q.x, q.y);
-          ctx.stroke();
+    /* 浅色页浮层不画连线（星座连线 + 鼠标连线），只留粒子和星尘，保证阅读零干扰 */
+    if (!overlay || theme.dark) {
+      ctx.lineWidth = overlay ? 0.5 : 1;
+      for (i = 0; i < particles.length; i++) {
+        p = particles[i];
+        for (j = i + 1; j < particles.length; j++) {
+          q = particles[j];
+          dx = p.x - q.x;
+          dy = p.y - q.y;
+          d2 = dx * dx + dy * dy;
+          if (d2 < linkD2) {
+            var a = (1 - Math.sqrt(d2) / linkDist) * cfg.lineOpacity * lineAlphaMul;
+            ctx.strokeStyle = rgba(theme.line, a);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.stroke();
+          }
         }
       }
     }
 
-    if (mouse.active) {
+    if (mouse.active && (!overlay || theme.dark)) {
       var mr2 = cfg.mouseRadius * cfg.mouseRadius;
       for (i = 0; i < particles.length; i++) {
         p = particles[i];
@@ -405,7 +461,7 @@
         dy = p.y - mouse.y;
         d2 = dx * dx + dy * dy;
         if (d2 < mr2) {
-          var ma = (1 - Math.sqrt(d2) / cfg.mouseRadius) * cfg.mouseLineOpacity;
+          var ma = (1 - Math.sqrt(d2) / cfg.mouseRadius) * cfg.mouseLineOpacity * (overlay ? 0.5 : 1);
           ctx.strokeStyle = rgba(theme.accent, ma);
           ctx.beginPath();
           ctx.moveTo(mouse.x, mouse.y);
@@ -425,7 +481,7 @@
       if (cfg.twinkle) alpha *= 0.55 + 0.45 * Math.sin(t * 0.0016 + p.tw);
       ctx.fillStyle = rgba(p.accent ? theme.accent : theme.dot, alpha);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.r * (overlay ? 0.85 : 1), 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -492,6 +548,30 @@
     mouse.y = -9999;
   }
 
+  function onTouchStart(e) {
+    var t = e.touches && e.touches[0];
+    if (t) {
+      mouse.x = t.clientX;
+      mouse.y = t.clientY;
+      mouse.active = true;
+    }
+  }
+
+  function onTouchMove(e) {
+    var t = e.touches && e.touches[0];
+    if (t) {
+      mouse.x = t.clientX;
+      mouse.y = t.clientY;
+      mouse.active = true;
+    }
+  }
+
+  function onTouchEnd() {
+    mouse.active = false;
+    mouse.x = -9999;
+    mouse.y = -9999;
+  }
+
   function onThemeChange() {
     if (disposed) return;
     theme = readTheme();
@@ -499,7 +579,7 @@
     if (cfg.mode !== 'overlay') {
       canvas.style.background = rgb(theme.bg);
     }
-    if (cfg.transparentize) transparentize();
+    if (cfg.transparentize && cfg.mode !== 'overlay') transparentize();
   }
 
   function loop(t) {
@@ -516,6 +596,7 @@
    *   · position:fixed / absolute 的悬浮层一律跳过
    */
   function transparentize() {
+    if (cfg.mode === 'overlay') return;   // 浮层模式不碰页面背景
     var root = cfg.root || document.getElementById('root') || document.body;
     if (!root) return;
     var base = rgb(theme.bg);
@@ -542,12 +623,30 @@
           var big = cover >= 0.60;
           var matchesBase = bg === base;
           if ((big && (opaqueColor || hasImage)) || matchesBase) {
+            var tracked = false;
+            for (var t = 0; t < transparentized.length; t++) {
+              if (transparentized[t].el === c) { tracked = true; break; }
+            }
+            if (!tracked) transparentized.push({ el: c, prev: c.style.background });
             c.style.background = 'transparent';
           }
         }
         stack.push(c);
       }
     }
+  }
+
+  /* 还原被透明化的元素（dispose / 重配置时调用，恢复页面原始背景） */
+  function restoreTransparentized() {
+    for (var i = transparentized.length - 1; i >= 0; i--) {
+      var rec = transparentized[i];
+      var el = rec && rec.el;
+      if (el && el.style && el.style.background === 'transparent') {
+        if (rec.prev) el.style.background = rec.prev;
+        else el.style.removeProperty('background');
+      }
+    }
+    transparentized = [];
   }
 
   /* 持续扫描：应用晚挂载 / 重渲染导致的大容器背景变化都能兜住 */
@@ -574,14 +673,25 @@
     }
   }
 
+  /* 主题变化防抖：SPA 高频改 body/html 属性时合并处理 */
+  function scheduleThemeApply() {
+    if (themeTimer !== null) return;
+    themeTimer = global.setTimeout(function () {
+      themeTimer = null;
+      if (disposed) return;
+      onThemeChange();
+    }, 120);
+  }
+
   /**
    * 挂载粒子背景。
    * @param {object} [opts] 配置覆盖（见 defaultCfg / CONFIG 注释）
    * @returns {function} 卸载函数
    */
   function mount(opts) {
-    if (mounted) return dispose;
     if (typeof document === 'undefined') return function () {};
+    if (mounted) stop();   // 重配置：停掉当前实例（保留画布，随后复用）
+    if (!ownerToken) ownerToken = 'dsh-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     cfg = defaultCfg(opts);
     reduced = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var overlay = cfg.mode === 'overlay';
@@ -595,12 +705,29 @@
       canvas.id = 'dsh-particle-canvas';
       canvas.setAttribute('aria-hidden', 'true');
       document.body.appendChild(canvas);
+    } else if (canvas.dataset.dshParticle && canvas.dataset.dshParticle !== ownerToken) {
+      // 画布已被其它引擎副本持有（如 DSH 插件与扩展同时加载）：不接管、不绘制
+      canvas = null;
+      ctx = null;
+      return function () {};
     }
+    if (!canvas || typeof canvas.getContext !== 'function') {
+      canvas = null;
+      ctx = null;
+      return function () {};
+    }
+    ctx = canvas.getContext('2d');
+    if (!ctx) {
+      // 画布已被其它上下文占用（如 webgl）
+      canvas = null;
+      return function () {};
+    }
+    canvas.dataset.dshParticle = ownerToken;
+
     var zIndex = cfg.zIndex !== null ? cfg.zIndex : (overlay ? 2147483000 : -1);
     canvas.style.cssText =
       'position:fixed;inset:0;z-index:' + zIndex + ';pointer-events:none;' +
       (overlay ? 'background:transparent;' : 'background:' + rgb(theme.bg) + ';');
-    ctx = canvas.getContext('2d');
 
     /* 样式覆写（behind 模式）：body 底色交给画布，内容保持在画布之上 */
     if (!overlay && cfg.transparentize) {
@@ -612,7 +739,11 @@
           'html,body{background:transparent!important}' +
           (rootEl ? '#root{position:relative;z-index:1}' : '');
         document.head.appendChild(st);
+        styleEl = st;
       }
+    } else if (styleEl && styleEl.parentNode) {
+      styleEl.parentNode.removeChild(styleEl);   // 从 behind 切到 overlay 时清掉旧样式
+      styleEl = null;
     }
 
     buildSprites();
@@ -621,22 +752,42 @@
     global.addEventListener('resize', onResize);
     global.addEventListener('mousemove', onMouseMove, { passive: true });
     global.addEventListener('mouseleave', onMouseLeave);
+    global.addEventListener('touchstart', onTouchStart, { passive: true });
+    global.addEventListener('touchmove', onTouchMove, { passive: true });
+    global.addEventListener('touchend', onTouchEnd, { passive: true });
 
-    /* 主题切换监听 */
-    themeObserver = new MutationObserver(function () { onThemeChange(); });
-    themeObserver.observe(document.body, { attributes: true });
-    themeObserver.observe(document.documentElement, { attributes: true });
+    /* 主题切换监听（属性过滤 + 防抖，避免 SPA 高频属性变化拖慢页面） */
+    themeObserver = new MutationObserver(function () { scheduleThemeApply(); });
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-ds-dark-theme'] });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-ds-dark-theme'] });
     if (global.matchMedia) {
       mediaDark = global.matchMedia('(prefers-color-scheme: dark)');
       if (mediaDark.addEventListener) {
-        mediaDark.addEventListener('change', onThemeChange);
+        mediaDark.addEventListener('change', scheduleThemeApply);
       } else if (mediaDark.addListener) {
-        mediaDark.addListener(onThemeChange);
+        mediaDark.addListener(scheduleThemeApply);
+      }
+      /* 运行期响应系统「减弱动态效果」切换 */
+      reducedMedia = global.matchMedia('(prefers-reduced-motion: reduce)');
+      reducedChangeHandler = function (m) {
+        reduced = !!m.matches;
+        if (reduced) {
+          if (rafId) global.cancelAnimationFrame(rafId);
+          rafId = 0;
+          drawFrame(performance.now());
+        } else if (mounted && !disposed) {
+          rafId = global.requestAnimationFrame(loop);
+        }
+      };
+      if (reducedMedia.addEventListener) {
+        reducedMedia.addEventListener('change', reducedChangeHandler);
+      } else if (reducedMedia.addListener) {
+        reducedMedia.addListener(reducedChangeHandler);
       }
     }
 
     /* 应用结构变化 → 持续补扫透明化 */
-    if (cfg.transparentize) {
+    if (cfg.transparentize && !overlay) {
       var scanRoot = cfg.root || document.getElementById('root') || document.body;
       if (scanRoot) {
         rootObserver = new MutationObserver(function () { scheduleScan(); });
@@ -655,31 +806,50 @@
     return dispose;
   }
 
-  function dispose() {
-    if (disposed) return;
-    disposed = true;
-    mounted = false;
+  /* 停掉当前实例的运行态（rAF/定时器/监听/观察器），并还原被透明化的元素。
+     不删除画布 —— 供 mount() 重配置时复用。 */
+  function stop() {
     if (rafId) global.cancelAnimationFrame(rafId);
     rafId = 0;
     for (var i = 0; i < transparentPasses.length; i++) global.clearTimeout(transparentPasses[i]);
     transparentPasses = [];
     if (scanTimer !== null) { global.clearTimeout(scanTimer); scanTimer = null; }
+    if (themeTimer !== null) { global.clearTimeout(themeTimer); themeTimer = null; }
     if (themeObserver) { themeObserver.disconnect(); themeObserver = null; }
     if (rootObserver) { rootObserver.disconnect(); rootObserver = null; }
     if (mediaDark) {
-      if (mediaDark.removeEventListener) mediaDark.removeEventListener('change', onThemeChange);
-      else if (mediaDark.removeListener) mediaDark.removeListener(onThemeChange);
+      if (mediaDark.removeEventListener) mediaDark.removeEventListener('change', scheduleThemeApply);
+      else if (mediaDark.removeListener) mediaDark.removeListener(scheduleThemeApply);
       mediaDark = null;
+    }
+    if (reducedMedia) {
+      if (reducedMedia.removeEventListener) reducedMedia.removeEventListener('change', reducedChangeHandler);
+      else if (reducedMedia.removeListener) reducedMedia.removeListener(reducedChangeHandler);
+      reducedMedia = null;
     }
     global.removeEventListener('resize', onResize);
     global.removeEventListener('mousemove', onMouseMove);
     global.removeEventListener('mouseleave', onMouseLeave);
+    global.removeEventListener('touchstart', onTouchStart);
+    global.removeEventListener('touchmove', onTouchMove);
+    global.removeEventListener('touchend', onTouchEnd);
+    restoreTransparentized();
     shooters = [];
+  }
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    mounted = false;
+    stop();
+    if (canvas && canvas.dataset.dshParticle === ownerToken) {
+      delete canvas.dataset.dshParticle;
+    }
     if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
     canvas = null;
     ctx = null;
-    var st = document.getElementById('dsh-particle-style');
-    if (st && st.parentNode) st.parentNode.removeChild(st);
+    if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+    styleEl = null;
   }
 
   global.DSH_Particles = { mount: mount, dispose: dispose, CONFIG: CONFIG };
@@ -799,7 +969,7 @@
     currentMode = null;
   }
 
-  function apply() {
+  function doApply() {
     if (document.getElementById('dsh-particle-canvas')) {
       // 页面已自带粒子层（例如 DeepSeek Harness 内置实例），扩展不重复挂载
       unmount();
@@ -821,6 +991,24 @@
     });
   }
 
+  var applyTimer = null;
+
+  /* 设置变化防抖：滑杆拖动等高频写入合并成一次重挂载，避免每 tick 重建粒子层 */
+  function apply(immediate) {
+    if (applyTimer !== null) {
+      global.clearTimeout(applyTimer);
+      applyTimer = null;
+    }
+    if (immediate) {
+      doApply();
+      return;
+    }
+    applyTimer = global.setTimeout(function () {
+      applyTimer = null;
+      doApply();
+    }, 150);
+  }
+
   chrome.storage.onChanged.addListener(function (changes, area) {
     if (area === 'sync' || area === 'local') apply();
   });
@@ -833,5 +1021,5 @@
   });
 
   /* 异步等待引擎就绪后启动（content.js = 引擎 + 本文件，引擎同步执行完毕） */
-  apply();
+  apply(true);
 })();

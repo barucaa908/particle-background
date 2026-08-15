@@ -1,16 +1,16 @@
 # 粒子背景 · Particle Background
 
 > ⭐ **浏览器扩展版（任何人可用）**：Chrome / Edge / Firefox 上安装后，
-> 任何网页都能有星座连线粒子背景。安装包在 `release/particle-background-v1.0.2.zip`
+> 任何网页都能有星座连线粒子背景。安装包在 `release/particle-background-v1.0.3.zip`
 > （拖进 `chrome://extensions` 即装），或上架商店。控制面板见 `extension/README.md`。
 >
 > 🧩 **DeepSeek Harness 内置版**：给 DSH Web GUI（http://127.0.0.1:3080）
 > 美化界面，无需重启、刷新即生效（见下文"方式一"）。
 
-星座连线粒子网络 + 星云光晕 + 星尘 + 流星 + 鼠标交互，自动适配深色/浅色主题。
+星座连线粒子网络 + 星云光晕 + 星尘 + 流星 + 鼠标/触摸交互，自动适配深色/浅色主题。
 
 ![效果说明] 深色主题下：粒子缓慢漂移、近距离自动连线（DeepSeek 品牌蓝）；
-鼠标移入时周围粒子被吸引并向光标连线，光标处有光晕，偶尔有流星划过。
+鼠标（或手指）移入时周围粒子被吸引并向光标连线，光标处有光晕，偶尔有流星划过。
 
 ---
 
@@ -54,7 +54,7 @@ DSH粒子背景/
 逐站停用，设置可云同步。**实测通过**（Edge 端到端验证注入成功）。
 
 - 自己用：`chrome://extensions` → 开发者模式 → 加载已解压的扩展 → 选 `extension/` 目录
-- 分发：`release/particle-background-v1.0.2.zip` 可拖入安装，或上架
+- 分发：`release/particle-background-v1.0.3.zip` 可拖入安装，或上架
   Chrome Web Store / Edge 加载项 / Firefox AMO（详细步骤见 `extension/README.md`）
 - 重新构建：`node build-extension.js`；端到端测试：`node test-extension.mjs`
 
@@ -132,16 +132,22 @@ node build-plugin.js    # 方式二（如已走插件路线）
 ## 兼容性 / 行为说明
 
 - **主题自适应**：读取 `--dsw-alias-bg-base`（背景）与 `--dsw-static-deepseek-450`
-  （品牌蓝），监听 body 上 `data-ds-dark-theme` 属性的切换，主题切换时自动换色。
+  （品牌蓝），监听 body 上 `data-ds-dark-theme` 属性的切换（带属性过滤与防抖，
+  SPA 高频 DOM 变化不会卡顿），主题切换时自动换色；支持 hex/hsl/oklch 等现代
+  颜色写法。
 - **不干扰 UI**：canvas 位于内容层之下（`#root` 被抬到 `z-index:1`），
-  `pointer-events: none`，不挡点击、不挡文本。
+  `pointer-events: none`，不挡点击、不挡文本；浮层模式下绝不改动页面背景。
 - **性能**：DPR 上限 2、粒子数按面积自适应、标签页隐藏自动暂停（rAF 语义）、
-  `prefers-reduced-motion: reduce` 时退化为静态画面。
+  `prefers-reduced-motion: reduce` 时退化为静态画面，且运行中切换系统动效
+  设置会即时响应。
 - **透明化外壳**：脚本会持续扫描 `#root` 全子树，把「覆盖视口 ≥ 60% 的
   不透明背景容器」（应用外壳、对话区等）以及「≥ 30% 且用主题底色填充的容器」
   设为透明，让粒子在主要内容区域透出；侧栏/输入条/气泡/弹窗等小块表面
   保持原样，不影响可读性。MutationObserver 持续兜底，应用晚挂载或
-  React 重渲染导致的新容器也能及时处理。
+  React 重渲染导致的新容器也能及时处理。**卸载（dispose）或切换模式时会完整
+  还原被透明化的背景**，不会在页面上留下副作用。
+- **重配置**：运行中再次调用 `mount(options)` 会停止旧实例并按新参数重挂载
+  （模式/密度/配色等即时生效），同一页面由多个副本同时加载时只保留一个实例。
 
 ## 卸载
 

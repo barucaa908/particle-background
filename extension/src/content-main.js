@@ -112,7 +112,7 @@
     currentMode = null;
   }
 
-  function apply() {
+  function doApply() {
     if (document.getElementById('dsh-particle-canvas')) {
       // 页面已自带粒子层（例如 DeepSeek Harness 内置实例），扩展不重复挂载
       unmount();
@@ -134,6 +134,24 @@
     });
   }
 
+  var applyTimer = null;
+
+  /* 设置变化防抖：滑杆拖动等高频写入合并成一次重挂载，避免每 tick 重建粒子层 */
+  function apply(immediate) {
+    if (applyTimer !== null) {
+      global.clearTimeout(applyTimer);
+      applyTimer = null;
+    }
+    if (immediate) {
+      doApply();
+      return;
+    }
+    applyTimer = global.setTimeout(function () {
+      applyTimer = null;
+      doApply();
+    }, 150);
+  }
+
   chrome.storage.onChanged.addListener(function (changes, area) {
     if (area === 'sync' || area === 'local') apply();
   });
@@ -146,5 +164,5 @@
   });
 
   /* 异步等待引擎就绪后启动（content.js = 引擎 + 本文件，引擎同步执行完毕） */
-  apply();
+  apply(true);
 })();
