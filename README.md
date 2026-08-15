@@ -1,7 +1,7 @@
-﻿# 粒子背景 · Particle Background
+# 粒子背景 · Particle Background
 
 > ⭐ **浏览器扩展版（任何人可用）**：Chrome / Edge / Firefox 上安装后，
-> 任何网页都能有星座连线粒子背景。安装包在 `release/particle-background-v1.0.1.zip`
+> 任何网页都能有星座连线粒子背景。安装包在 `release/particle-background-v1.0.2.zip`
 > （拖进 `chrome://extensions` 即装），或上架商店。控制面板见 `extension/README.md`。
 >
 > 🧩 **DeepSeek Harness 内置版**：给 DSH Web GUI（http://127.0.0.1:3080）
@@ -50,7 +50,7 @@ DSH粒子背景/
 逐站停用，设置可云同步。**实测通过**（Edge 端到端验证注入成功）。
 
 - 自己用：`chrome://extensions` → 开发者模式 → 加载已解压的扩展 → 选 `extension/` 目录
-- 分发：`release/particle-background-v1.0.1.zip` 可拖入安装，或上架
+- 分发：`release/particle-background-v1.0.2.zip` 可拖入安装，或上架
   Chrome Web Store / Edge 加载项 / Firefox AMO（详细步骤见 `extension/README.md`）
 - 重新构建：`node build-extension.js`；端到端测试：`node test-extension.mjs`
 

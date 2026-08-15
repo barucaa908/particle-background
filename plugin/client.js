@@ -50,6 +50,8 @@ window.__ModuleLoader__.load({
 		    nebula: true,             // 星云光晕层
 		    mouseRadius: 170,         // 鼠标影响半径 px
 		    mouseAttract: 0.05,       // 鼠标吸引力
+		    friction: 0.985,          // 每帧速度阻尼（防止鼠标吸引导致速度无限累积）
+		    maxSpeed: 3.0,            // 粒子最大速度 px/帧
 		    mouseLineOpacity: 0.42,   // 光标-粒子连线不透明度
 		    mouseGlow: true,          // 光标处光晕（浮层模式下自动关闭，避免遮字）
 		    shootingStars: true,      // 流星
@@ -395,6 +397,7 @@ window.__ModuleLoader__.load({
 		      ctx.fill();
 		    }
 		
+		    /* 粒子运动：鼠标吸引 + 阻尼/限速 + 越界环绕 */
 		    for (i = 0; i < particles.length; i++) {
 		      p = particles[i];
 		      if (mouse.active) {
@@ -408,6 +411,16 @@ window.__ModuleLoader__.load({
 		          p.vx += (dx / d) * f;
 		          p.vy += (dy / d) * f;
 		        }
+		      }
+		      /* 阻尼 + 速度上限：鼠标吸引是逐帧加速度，若无衰减速度会无限累积，
+		         粒子最终满屏乱飞、连线织成密网盖住内容（点化成线） */
+		      p.vx *= cfg.friction;
+		      p.vy *= cfg.friction;
+		      var sp2 = p.vx * p.vx + p.vy * p.vy;
+		      if (sp2 > cfg.maxSpeed * cfg.maxSpeed) {
+		        var sp = Math.sqrt(sp2);
+		        p.vx = (p.vx / sp) * cfg.maxSpeed;
+		        p.vy = (p.vy / sp) * cfg.maxSpeed;
 		      }
 		      p.x += p.vx;
 		      p.y += p.vy;

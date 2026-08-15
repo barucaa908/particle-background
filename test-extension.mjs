@@ -195,6 +195,28 @@ try {
   console.log('===== 渐变背景页（自动模式 → 应解析为浮层模式） =====');
   console.log(JSON.stringify(state3, null, 1));
 
+  /* 鼠标稳定性：把鼠标停在屏幕中央 12 秒，粒子速度应被阻尼限制，
+     蓝色线条占比应保持有界（不会点化成线铺满屏幕） */
+  await send('Page.navigate', { url: `http://127.0.0.1:${HTTP_PORT}/test.html` });
+  await sleep(4000);
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 640, y: 400 });
+  await sleep(12000);
+  const state4 = await evalPage(`(() => {
+    const canvas = document.getElementById('dsh-particle-canvas');
+    if (!canvas) return { canvasPresent: false };
+    const g = canvas.getContext('2d');
+    const d = g.getImageData(0, 0, canvas.width, canvas.height).data;
+    let blue = 0, total = 0;
+    for (let i = 0; i < d.length; i += 16) {
+      const r = d[i], g2 = d[i + 1], b = d[i + 2];
+      if (b > 100 && b > r + 20) blue++;
+      total++;
+    }
+    return { canvasPresent: true, blueFrac: +(blue / total).toFixed(3) };
+  })()`);
+  console.log('===== 鼠标长按 12s 稳定性（蓝色线条占比应 < 0.4） =====');
+  console.log(JSON.stringify(state4, null, 1));
+
   /* 切到 DSH GUI：扩展应跳过（页面已有内置粒子层） */
   console.error('[test] 访问 DSH GUI 检查不重复挂载…');
   await send('Page.navigate', { url: 'http://127.0.0.1:3080/' });
@@ -214,6 +236,8 @@ try {
     state3.canvasPresent === true &&
     state3.canvasZ === '2147483000' &&
     state3.styleInjected === false &&
+    state4.canvasPresent === true &&
+    state4.blueFrac < 0.4 &&
     state2.canvasCount <= 1;
   console.log(pass ? '\n✅ 扩展实测通过' : '\n❌ 实测未通过，见上方输出');
   process.exitCode = pass ? 0 : 1;
