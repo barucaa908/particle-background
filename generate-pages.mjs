@@ -94,10 +94,24 @@ function layoutHero(t, rnd) {
   </div>`;
 }
 
+function layoutGallery(t, rnd) {
+  const tiles = [];
+  const hues = ['#dbeafe', '#fde68a', '#fbcfe8', '#a7f3d0', '#c7d2fe', '#fed7aa', '#bfdbfe', '#e9d5ff', '#fecaca', '#d1fae5'];
+  for (let i = 0; i < 24; i++) {
+    tiles.push(`<div class="tile" style="background:${hues[Math.floor(rnd() * hues.length)]}"></div>`);
+  }
+  return `
+  <main class="wrap gallery">
+    <div class="topbar"><h1>图片搜索</h1><div class="search">搜索…</div></div>
+    <div class="grid">${tiles.join('\n      ')}</div>
+  </main>`;
+}
+
 const LAYOUTS = [
   { key: 'article', fn: layoutArticle },
   { key: 'dashboard', fn: layoutDashboard },
-  { key: 'hero', fn: layoutHero }
+  { key: 'hero', fn: layoutHero },
+  { key: 'gallery', fn: layoutGallery }
 ];
 
 function pageHtml(theme, bg, layout, rnd) {
@@ -144,6 +158,8 @@ function pageHtml(theme, bg, layout, rnd) {
   .f .ic { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, ${accent}, #8b5cf6); margin-bottom: 10px; }
   .f h3 { font-size: 15px; margin-bottom: 4px; }
   .f p { color: ${t.sub}; font-size: 13px; line-height: 1.6; }
+  .gallery .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .gallery .tile { aspect-ratio: 1; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 </style>
 </head>
 <body>

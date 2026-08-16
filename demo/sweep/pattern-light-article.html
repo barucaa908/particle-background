@@ -39,6 +39,8 @@
   .f .ic { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, #3b5bd6, #8b5cf6); margin-bottom: 10px; }
   .f h3 { font-size: 15px; margin-bottom: 4px; }
   .f p { color: #5b6472; font-size: 13px; line-height: 1.6; }
+  .gallery .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .gallery .tile { aspect-ratio: 1; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 </style>
 </head>
 <body>
@@ -47,16 +49,16 @@
     <h1>给界面加一层会呼吸的星空</h1>
     <div class="meta">测试页 · 文章布局 · light 主题</div>
     <h2>原理：距离即缘分</h2>
-    <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：它在视觉上属于加法中的减法——不抢内容，只给背景增加纵深与动感。</p>
-    <p>粒子缓慢漂移，彼此靠近时自动连出细线，鼠标移过之处粒子微微靠拢。它在视觉上属于加法中的减法——不抢内容，只给背景增加纵深与动感。</p>
+    <p>粒子缓慢漂移，彼此靠近时自动连出细线，鼠标移过之处粒子微微靠拢。实现它的核心不过是一个全屏 canvas 和几十行几何计算，轻量且高效。</p>
+    <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：实现它的核心不过是一个全屏 canvas 和几十行几何计算，轻量且高效。</p>
     <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：它在视觉上属于加法中的减法——不抢内容，只给背景增加纵深与动感。</p>
     <pre>for (i = 0; i &lt; particles.length; i++)
   for (j = i + 1; j &lt; particles.length; j++)
     if (distSq(i, j) &lt; linkDist * linkDist)
       line(i, j, alpha = 1 - dist / linkDist);</pre>
-    <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：它在视觉上属于加法中的减法——不抢内容，只给背景增加纵深与动感。</p>
     <p>粒子缓慢漂移，彼此靠近时自动连出细线，鼠标移过之处粒子微微靠拢。它在视觉上属于加法中的减法——不抢内容，只给背景增加纵深与动感。</p>
-    <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：实现它的核心不过是一个全屏 canvas 和几十行几何计算，轻量且高效。</p>
+    <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：它在视觉上属于加法中的减法——不抢内容，只给背景增加纵深与动感。</p>
+    <p>星座连线的粒子背景是科技产品界面里最经典的氛围装饰之一：它在视觉上属于加法中的减法——不抢内容，只给背景增加纵深与动感。</p>
     <blockquote>好的氛围装饰应该像呼吸一样自然：你看得见它，但从不觉得被打扰。</blockquote>
   </article>
 </body>

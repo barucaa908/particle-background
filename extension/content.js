@@ -37,18 +37,20 @@
 
   /* ============================== 默认配置 ============================== */
   var CONFIG = {
-    maxParticles: 130,        // 星座粒子数上限（按屏幕面积再缩放）
+    maxParticles: 180,        // 星座粒子数上限（按屏幕面积再缩放；大屏更密）
     linkDistance: 130,        // 粒子连线最大距离 px
-    lineOpacity: 0.20,        // 连线最大不透明度
-    dotOpacity: 0.90,         // 粒子点基础不透明度
+    lineOpacity: 0.23,        // 连线最大不透明度
+    dotOpacity: 0.95,         // 粒子点基础不透明度
     twinkle: true,            // 粒子闪烁
     starfield: true,          // 星尘层
     stars: 90,                // 星尘数量
     nebula: true,             // 星云光晕层
     mouseRadius: 170,         // 鼠标影响半径 px
     mouseAttract: 0.07,       // 鼠标吸引力（v1.0.0 手感：更强、更跟手）
-    friction: 0.99,           // 每帧速度阻尼（防发散；比 v1.0.2 的 0.985 更软，保留甩动感）
+    friction: 0.99,           // 每帧速度阻尼（仅鼠标吸引时启用，防发散；保留甩动感）
     maxSpeed: 5.0,            // 粒子最大速度 px/帧（有界版 v1.0.0：能甩旋涡但不失控）
+    idleWanderAmp: 0.45,      // 空闲漂移的目标速度正弦游走幅度（px/帧）
+    idleWanderRate: 0.02,     // 空闲时实际速度向目标速度的收敛率
     mouseLineOpacity: 0.42,   // 光标-粒子连线不透明度
     mouseGlow: true,          // 光标处光晕（浮层模式下自动关闭，避免遮字）
     shootingStars: true,      // 流星
@@ -271,11 +273,11 @@
         { c: { r: 56, g: 189, b: 248 }, a: 0.05, s: 0.75 }    // 青
       ];
     } else {
-      dot = { r: 44, g: 66, b: 122 };          // 深蓝灰
-      line = { r: 65, g: 118, b: 230 };
+      dot = { r: 30, g: 52, b: 112 };          // 深蓝（浅色页更醒目）
+      line = { r: 50, g: 102, b: 224 };
       nebula = [
-        { c: accent, a: 0.10, s: 0.95 },
-        { c: { r: 139, g: 92, b: 246 }, a: 0.05, s: 1.05 }
+        { c: accent, a: 0.12, s: 0.95 },
+        { c: { r: 139, g: 92, b: 246 }, a: 0.06, s: 1.05 }
       ];
     }
 
@@ -319,15 +321,19 @@
   /* ============================== 粒子初始化 ============================== */
   function initParticles() {
     var area = W * H;
-    var n = Math.round(clamp(area / 11000, 40, cfg.maxParticles) * cfg.density);
+    var n = Math.round(clamp(area / 9500, 55, cfg.maxParticles) * cfg.density);
     n = Math.round(clamp(n, 10, 320));
     particles = [];
     for (var i = 0; i < n; i++) {
+      var bvx = (Math.random() - 0.5) * 1.0;
+      var bvy = (Math.random() - 0.5) * 1.0;
       particles.push({
         x: Math.random() * W,
         y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.7,
-        vy: (Math.random() - 0.5) * 0.7,
+        vx: bvx,
+        vy: bvy,
+        baseVx: bvx,   // 空闲漂移目标速度基线（永不被阻尼衰减，粒子不会冻住）
+        baseVy: bvy,
         r: 1.2 + Math.random() * 1.8,
         tw: Math.random() * Math.PI * 2,
         accent: Math.random() < 0.15
@@ -523,16 +529,17 @@
           p.vy += (dy / d) * f;
         }
       }
-      /* 阻尼只在鼠标吸引生效时启用（防止逐帧加速度无限累积）；
-         空闲时保留初始漂移速度，粒子不会"冻成静态点" */
+      /* 鼠标吸引时阻尼防发散（保留甩动感）；
+         空闲时目标速度沿正弦缓慢游走、实际速度向目标收敛：
+         粒子画出有机曲线，永远在动、永远不会冻成静态点 */
       if (mouse.active) {
         p.vx *= cfg.friction;
         p.vy *= cfg.friction;
       } else {
-        /* 空闲自主漂移：缓慢的正弦扰动让粒子缓慢转向、幅度更足，
-           又不至于乱飞（积分有界，且仍受 maxSpeed 上限约束） */
-        p.vx += Math.sin(t * 0.001 + p.tw) * 0.0008;
-        p.vy += Math.cos(t * 0.0012 + p.tw * 1.7) * 0.0008;
+        var tVx = p.baseVx + Math.sin(t * 0.00045 + p.tw) * cfg.idleWanderAmp;
+        var tVy = p.baseVy + Math.cos(t * 0.00055 + p.tw * 1.7) * cfg.idleWanderAmp;
+        p.vx += (tVx - p.vx) * cfg.idleWanderRate;
+        p.vy += (tVy - p.vy) * cfg.idleWanderRate;
       }
       var sp2 = p.vx * p.vx + p.vy * p.vy;
       if (sp2 > cfg.maxSpeed * cfg.maxSpeed) {
