@@ -1,7 +1,7 @@
 # 粒子背景 · Particle Background
 
 > ⭐ **浏览器扩展版（任何人可用）**：Chrome / Edge / Firefox 上安装后，
-> 任何网页都能有星座连线粒子背景。安装包在 `release/particle-background-v1.0.3.zip`
+> 任何网页都能有星座连线粒子背景。安装包在 `release/particle-background-v1.0.4.zip`
 > （拖进 `chrome://extensions` 即装），或上架商店。控制面板见 `extension/README.md`。
 >
 > 🧩 **DeepSeek Harness 内置版**：给 DSH Web GUI（http://127.0.0.1:3080）
@@ -54,7 +54,7 @@ DSH粒子背景/
 逐站停用，设置可云同步。**实测通过**（Edge 端到端验证注入成功）。
 
 - 自己用：`chrome://extensions` → 开发者模式 → 加载已解压的扩展 → 选 `extension/` 目录
-- 分发：`release/particle-background-v1.0.3.zip` 可拖入安装，或上架
+- 分发：`release/particle-background-v1.0.4.zip` 可拖入安装，或上架
   Chrome Web Store / Edge 加载项 / Firefox AMO（详细步骤见 `extension/README.md`）
 - 重新构建：`node build-extension.js`；端到端测试：`node test-extension.mjs`
 
@@ -108,10 +108,10 @@ dsh web
 
 | 键 | 默认 | 说明 |
 | --- | --- | --- |
-| `maxParticles` | 130 | 星座粒子数上限（按屏幕面积自适应缩放） |
+| `maxParticles` | 180 | 星座粒子数上限（按屏幕面积自适应缩放） |
 | `linkDistance` | 130 | 粒子连线最大距离（px） |
-| `lineOpacity` | 0.20 | 连线最大不透明度 |
-| `dotOpacity` | 0.90 | 粒子点不透明度 |
+| `lineOpacity` | 0.23 | 连线最大不透明度 |
+| `dotOpacity` | 0.95 | 粒子点不透明度 |
 | `twinkle` | true | 粒子闪烁 |
 | `starfield` | true | 星尘层开关 |
 | `nebula` | true | 星云光晕开关 |
@@ -121,6 +121,8 @@ dsh web
 | `mouseAttract` | 0.07 | 鼠标吸引力 |
 | `friction` | 0.99 | 鼠标交互时的每帧速度阻尼（防发散；值越大甩动感越强） |
 | `maxSpeed` | 5.0 | 粒子最大速度（px/帧），有界版 v1.0.0：能甩出旋涡但不失控 |
+| `idleWanderAmp` | 0.45 | 空闲漂移目标速度的正弦游走幅度（越大越"活"） |
+| `idleWanderRate` | 0.02 | 空闲时实际速度向目标速度的收敛率 |
 | `mouseLineOpacity` | 0.42 | 光标-粒子连线不透明度 |
 | `dprCap` | 2 | 设备像素比上限（性能） |
 
